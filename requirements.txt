@@ -1,0 +1,6 @@
+beautifulsoup4==4.6.0
+bs4==0.0.1
+configparser==3.5.0
+Pillow==5.1.0
+pytesseract==0.2.0
+selenium==3.11.0
