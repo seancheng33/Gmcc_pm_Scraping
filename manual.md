@@ -15,13 +15,10 @@
 > chardet==3.0.4 <br>
 > configparser==3.5.0 <br>
 > idna==2.6 <br>
-> numpy==1.14.3 <br>
-> opencv-python==3.4.0.12 <br>
-> Pillow==5.1.0 <br>
-> pytesseract==0.2.0 <br>
 > requests==2.18.4 <br>
 > selenium==3.11.0 <br>
 > urllib3==1.22 <br>
+> XlsxWriter==1.0.4<br>
 
 
 依赖库可以通过命令安装：
