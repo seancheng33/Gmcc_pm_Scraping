@@ -42,7 +42,7 @@ send_order = Select(driver.find_element_by_xpath('//*[@id="isSend"]'))
 send_order.select_by_index(0)
 
 page_length = Select(driver.find_element_by_xpath('//*[@id="data-table_length"]/label/select'))
-page_length.select_by_visible_text('1000')
+page_length.select_by_visible_text('1000')  # 显示1000条数据，基本上所有的数据都可以显示出来
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
@@ -130,6 +130,7 @@ for item_url in url_all:
 
     for item in order_list:
         if item['orderId'] == order_id:
+            item['current_operator'] = processing_list[-1][1]
             item['rejectNum'] = examine_num
             # item['processing'] = processing_list
             item['rejectList'] = reject_list
@@ -142,28 +143,28 @@ workbook = xlsxwriter.Workbook('./data/' + filename + '.xlsx')
 worksheet = workbook.add_worksheet(filename)
 
 # 设置列宽,
-worksheet.set_column('A:A', 16)
-worksheet.set_column('B:B', 16)
+worksheet.set_column('A:A', 15)
+worksheet.set_column('B:B', 15)
 worksheet.set_column('C:C', 25)
-worksheet.set_column('D:D', 10)
+worksheet.set_column('D:D', 8)
 worksheet.set_column('E:E', 10)
 worksheet.set_column('F:F', 16)
 worksheet.set_column('G:G', 10)
-worksheet.set_column('H:H', 10)
-worksheet.set_column('I:I', 50)
-worksheet.set_column('J:J', 20)
-worksheet.set_column('K:K', 50)
-worksheet.set_column('L:L', 20)
-worksheet.set_column('M:M', 50)
-worksheet.set_column('N:N', 20)
-worksheet.set_column('O:O', 50)
-worksheet.set_column('P:P', 20)
-worksheet.set_column('Q:Q', 50)
-worksheet.set_column('R:R', 20)
+worksheet.set_column('H:H', 5)
+worksheet.set_column('I:I', 30)
+worksheet.set_column('J:J', 10)
+worksheet.set_column('K:K', 30)
+worksheet.set_column('L:L', 10)
+worksheet.set_column('M:M', 30)
+worksheet.set_column('N:N', 10)
+worksheet.set_column('O:O', 30)
+worksheet.set_column('P:P', 10)
+worksheet.set_column('Q:Q', 30)
+worksheet.set_column('R:R', 10)
 
 # 设置标题头样式，字体加粗，水平对齐,上下居中，边框1像素
-titlecss = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1,
-                                'bg_color': 'blue','color': 'white'})
+titlecss = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 2,
+                                'bg_color': 'blue','color': 'white', 'text_wrap': True})
 contextcss = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'text_wrap': True})
 
 title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '提交时间', '状态', '所属分公司', '退单次数',
