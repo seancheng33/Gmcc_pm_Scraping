@@ -23,6 +23,8 @@ driver.get(config.get("basic", "url"))
 driver.find_element_by_xpath('//*[@id="name"]').send_keys(config.get("basic", "username"))
 driver.find_element_by_xpath('/html/body/div/div/div[2]/div/form/div[3]/input').send_keys(
     config.get("basic", "password"))
+driver.find_element_by_xpath('/html/body/div/div/div[2]/div/form/div[4]/input').send_keys('')
+# 发送一个空值过去，让输入光标停留在输入校验码的框里面
 
 #
 time.sleep(10)
@@ -36,16 +38,20 @@ driver.switch_to.frame("framecontent")  # 要获取到页面中的iframe，如�
 # 重新提交条件搜索出内容
 company = Select(driver.find_element_by_xpath('//*[@id="subBranch"]'))
 company.select_by_index(0)
+send_order = Select(driver.find_element_by_xpath('//*[@id="isSend"]'))
+send_order.select_by_index(0)
 
 page_length = Select(driver.find_element_by_xpath('//*[@id="data-table_length"]/label/select'))
-page_length.select_by_visible_text('50')
+page_length.select_by_visible_text('1000')
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
-driver.implicitly_wait(15)
-
-# page_num = driver.find_element_by_xpath('//*[@id="data-table_info"]')
-# print(page_num.text)
+driver.implicitly_wait(100)
+# time.sleep(2) # 需要这样停数秒，才能获取到
+# page_num = driver.find_element_by_id('data-table_info').text
+# total_page = re.findall('共(.*)页',page_num)
+# total_page = int(total_page[0].replace(' ',''))
+# print(total_page[0].replace(' ',''))
 
 url_all = []
 order_list = []
@@ -79,7 +85,9 @@ for tr in trs:
     order_list.append(order_dict)
 
     url_all.append(url_fix)
-    # 获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
+    #  获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
+
+    driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
 
 for item_url in url_all:
     driver.get(item_url)  # 直接使用上面的分离出来的url打开为新页面，处理步骤的分页功能失效，直接加载了全部的步骤出来，方便了不用判断步骤的分页
@@ -151,11 +159,11 @@ worksheet.set_column('N:N', 20)
 worksheet.set_column('O:O', 50)
 worksheet.set_column('P:P', 20)
 worksheet.set_column('Q:Q', 50)
-worksheet.set_column('Q:Q', 20)
+worksheet.set_column('R:R', 20)
 
 # 设置标题头样式，字体加粗，水平对齐,上下居中，边框1像素
 titlecss = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1,
-                                'bg_color': 'blue', 'text_color': 'white'})
+                                'bg_color': 'blue','color': 'white'})
 contextcss = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'text_wrap': True})
 
 title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '提交时间', '状态', '所属分公司', '退单次数',
