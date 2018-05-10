@@ -42,7 +42,7 @@ send_order = Select(driver.find_element_by_xpath('//*[@id="isSend"]'))
 send_order.select_by_index(0)
 
 page_length = Select(driver.find_element_by_xpath('//*[@id="data-table_length"]/label/select'))
-page_length.select_by_visible_text('1000')  # 显示1000条数据，基本上所有的数据都可以显示出来
+page_length.select_by_visible_text('50')  # 显示1000条数据，基本上所有的数据都可以显示出来
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
@@ -131,6 +131,7 @@ for item_url in url_all:
     for item in order_list:
         if item['orderId'] == order_id:
             item['current_operator'] = processing_list[-1][1]
+            # print(item['current_operator'])
             item['rejectNum'] = examine_num
             # item['processing'] = processing_list
             item['rejectList'] = reject_list
@@ -150,38 +151,54 @@ worksheet.set_column('D:D', 8)
 worksheet.set_column('E:E', 10)
 worksheet.set_column('F:F', 16)
 worksheet.set_column('G:G', 10)
-worksheet.set_column('H:H', 5)
-worksheet.set_column('I:I', 30)
-worksheet.set_column('J:J', 10)
-worksheet.set_column('K:K', 30)
-worksheet.set_column('L:L', 10)
-worksheet.set_column('M:M', 30)
-worksheet.set_column('N:N', 10)
-worksheet.set_column('O:O', 30)
-worksheet.set_column('P:P', 10)
-worksheet.set_column('Q:Q', 30)
-worksheet.set_column('R:R', 10)
+worksheet.set_column('H:H', 10)
+worksheet.set_column('I:I', 5)
+worksheet.set_column('J:J', 30)
+worksheet.set_column('K:K', 10)
+worksheet.set_column('L:L', 30)
+worksheet.set_column('M:M', 10)
+worksheet.set_column('N:N', 30)
+worksheet.set_column('O:O', 10)
+worksheet.set_column('P:P', 30)
+worksheet.set_column('Q:Q', 10)
+worksheet.set_column('R:R', 30)
+worksheet.set_column('S:S', 10)
+worksheet.set_column('T:T', 30)
+worksheet.set_column('U:U', 10)
+worksheet.set_column('V:V', 30)
+worksheet.set_column('W:W', 10)
+worksheet.set_column('X:X', 30)
+worksheet.set_column('Y:Y', 10)
+worksheet.set_column('Z:Z', 30)
+worksheet.set_column('AA:AA', 10)
+worksheet.set_column('AB:AB', 30)
+worksheet.set_column('AC:AC', 10)
+
 
 # 设置标题头样式，字体加粗，水平对齐,上下居中，边框1像素
 titlecss = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 2,
                                 'bg_color': 'blue','color': 'white', 'text_wrap': True})
 contextcss = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'text_wrap': True})
 
-title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '提交时间', '状态', '所属分公司', '退单次数',
-         '省公司第一次退单原因', '第一次退单操作人', '省公司第二次退单原因', '第二次退单操作人', '省公司第三次退单原因', '第三次退单操作人',
-         '省公司第四次退单原因', '第四次退单操作人', '省公司第五次退单原因', '第五次退单操作人']
+title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '提交时间', '状态', '当前处理人', '所属分公司', '退单次数',
+         '省公司第一次退单原因', '第一次退单操作人', '省公司第二次退单原因', '第二次退单操作人', '省公司第三次退单原因',
+         '第三次退单操作人', '省公司第四次退单原因', '第四次退单操作人', '省公司第五次退单原因', '第五次退单操作人',
+         '省公司第六次退单原因', '第六次退单操作人', '省公司第七次退单原因', '第七次退单操作人', '省公司第八次退单原因',
+         '第八次退单操作人', '省公司第九次退单原因', '第九次退单操作人', '省公司第十次退单原因', '第十次退单操作人',
+         ]
 worksheet.write_row('A1', title,titlecss)
 num = 2
 for item in order_list:
 
-    a1 = item['orderId']
-    a2 = item['stationId']
-    a3 = item['stationName']
-    a4 = item['sended']
-    a5 = item['submitTime']
-    a6 = item['status']
-    a7 = item['company']
-    a8 = item['rejectNum']
+    orderId = item['orderId']
+    stationId = item['stationId']
+    stationName = item['stationName']
+    sended = item['sended']
+    submitTime = item['submitTime']
+    status = item['status']
+    current_operator = item['current_operator']
+    company = item['company']
+    rejectNum = item['rejectNum']
 
     tDict = item['rejectList']
     tList = []
@@ -190,11 +207,16 @@ for item in order_list:
             tList.append(item['status'])
             tList.append(item['name'])
 
-    if a7 == '中山分公司':
+    if company == '中山分公司':
         # 如果出现“中山分公司”，抛弃该条数据
         continue
 
-    dataRow = [a1, a2, a3, a4, a5, a6, a7, a8]
+    # 如果退单的列表长度不够20，就在列表后面不20减去列表长度的数量的空格，目的是要让这些空白的单元格也有边框，属于文件的美化
+    if len(tList) < 20:
+        for i in range(20-len(tList)):
+            tList.append(' ')
+
+    dataRow = [orderId, stationId, stationName, sended, submitTime, status, current_operator, company, rejectNum]
     dataRow = dataRow + tList
     # tmp_list = list(item.values())
 
