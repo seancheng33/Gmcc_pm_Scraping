@@ -42,7 +42,7 @@ send_order = Select(driver.find_element_by_xpath('//*[@id="isSend"]'))
 send_order.select_by_index(0)
 
 page_length = Select(driver.find_element_by_xpath('//*[@id="data-table_length"]/label/select'))
-page_length.select_by_visible_text('50')  # 显示1000条数据，基本上所有的数据都可以显示出来
+page_length.select_by_visible_text('10')  # 显示1000条数据，基本上所有的数据都可以显示出来
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
@@ -78,16 +78,14 @@ for tr in trs:
     order_dict['sended'] = data_list[8].text
     order_dict['submitTime'] = data_list[9].text
     order_dict['status'] = data_list[10].text
-    # order_dict['operator'] = data_list[12].text
     order_dict['company'] = data_list[11].text
-    # order_dict['processing'] = []
 
     order_list.append(order_dict)
 
     url_all.append(url_fix)
     #  获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
 
-    driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
+    # driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
 
 for item_url in url_all:
     driver.get(item_url)  # 直接使用上面的分离出来的url打开为新页面，处理步骤的分页功能失效，直接加载了全部的步骤出来，方便了不用判断步骤的分页
@@ -140,7 +138,7 @@ for item_url in url_all:
 
 # 内容写入excle文件中
 filename = time.strftime('%Y%m%d', time.localtime(time.time()))
-workbook = xlsxwriter.Workbook('./data/' + filename + '.xlsx')
+workbook = xlsxwriter.Workbook(os.path.abspath('data/' + filename + '.xlsx'))
 worksheet = workbook.add_worksheet(filename)
 
 # 设置列宽,
