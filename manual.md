@@ -7,17 +7,14 @@
 将收集后的数据，汇总，过滤掉非该地市的内容，统计出不同意的信息，
 最后将内容写入一个Excel文件中，该文件定义了文件的title，逐行写入信息。
 
+本脚本在某些国产的所谓的安全软件，会报安全问题，因为其在频繁的操作。
+
 
 ## 依赖的外部库
 > beautifulsoup4==4.6.0 <br>
 > bs4==0.0.1 <br>
-> certifi==2018.4.16 <br>
-> chardet==3.0.4 <br>
 > configparser==3.5.0 <br>
-> idna==2.6 <br>
-> requests==2.18.4 <br>
 > selenium==3.11.0 <br>
-> urllib3==1.22 <br>
 > XlsxWriter==1.0.4<br>
 
 
