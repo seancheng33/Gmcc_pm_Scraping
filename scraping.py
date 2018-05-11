@@ -32,6 +32,7 @@ driver.find_element_by_xpath('/html/body/div/div/div[2]/div/form/div[5]/a').clic
 
 driver.find_element_by_xpath('//*[@id="header"]/div[3]/div/div/ul/li[5]/a').click()
 driver.find_element_by_xpath('//*[@id="submenus160"]/li[2]/a').click()
+# driver.get('http://10.251.147.207/complex/auditOrder/list.do')
 
 driver.implicitly_wait(10)  # 浏览器智能等待10秒
 driver.switch_to.frame("framecontent")  # 要获取到页面中的iframe，如果不这个做，获取元素或报错
@@ -42,52 +43,56 @@ send_order = Select(driver.find_element_by_xpath('//*[@id="isSend"]'))
 send_order.select_by_index(0)
 
 page_length = Select(driver.find_element_by_xpath('//*[@id="data-table_length"]/label/select'))
-page_length.select_by_visible_text('10')  # 显示1000条数据，基本上所有的数据都可以显示出来
+page_length.select_by_visible_text('50')  # 显示100条数据，显示太少的话，请求会过于频繁。
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
-driver.implicitly_wait(100)
-# time.sleep(2) # 需要这样停数秒，才能获取到
-# page_num = driver.find_element_by_id('data-table_info').text
-# total_page = re.findall('共(.*)页',page_num)
-# total_page = int(total_page[0].replace(' ',''))
-# print(total_page[0].replace(' ',''))
+time.sleep(15)  # 需要这样停数秒，才能获取到
+page_num = driver.find_element_by_id('data-table_info').text
+total_page = re.findall('共(.*)页', page_num)  # 通过正则表达式获取总页数
+total_page = int(total_page[0].replace(' ', ''))  # 转为int类型
 
+current_page = 1
 url_all = []
 order_list = []
 
-trs = driver.find_elements_by_xpath('//*[@id="data-table"]/tbody/tr')
-for tr in trs:
-    tr_html = tr.get_attribute('innerHTML')
-    soup = BeautifulSoup(tr_html, 'html.parser')
-    data_list = soup.find_all('td')
-    url_list = data_list[-1].find_all('a')
-    url = url_list[-1].get('href')
+# 循环执行，知道当前页的页码等于总页码（当前页小于总页码+1）
+while current_page < total_page+1:
+    time.sleep(15)
+    trs = driver.find_elements_by_xpath('//*[@id="data-table"]/tbody/tr')
+    for tr in trs:
+        tr_html = tr.get_attribute('innerHTML')
+        soup = BeautifulSoup(tr_html, 'html.parser')
+        data_list = soup.find_all('td')
+        url_list = data_list[-1].find_all('a')
+        url = url_list[-1].get('href')
 
-    url_fix = re.findall('"(.*)"', url)  # 通过正则表达式获取两个引号中的内容
-    # 上面获取到的内容，是一个list，但实际只用一个值
-    url_fix = config.get("basic", "base_url") + url_fix[0]  # 在前面加上基础的网址,组合成一段完整的网址
+        url_fix = re.findall('"(.*)"', url)  # 通过正则表达式获取两个引号中的内容
+        # 上面获取到的内容，是一个list，但实际只用一个值
+        url_fix = config.get("basic", "base_url") + url_fix[0]  # 在前面加上基础的网址,组合成一段完整的网址
 
-    # print(data_list[0].text, url_fix)
+        # print(data_list[0].text, url_fix)
 
-    order_dict = {}
+        order_dict = {}
 
-    order_dict['orderId'] = data_list[0].text
-    order_dict['stationId'] = data_list[1].text
-    order_dict['stationName'] = data_list[2].text
-    order_dict['sended'] = data_list[8].text
-    order_dict['submitTime'] = data_list[9].text
-    order_dict['status'] = data_list[10].text
-    order_dict['company'] = data_list[11].text
+        order_dict['orderId'] = data_list[0].text
+        order_dict['stationId'] = data_list[1].text
+        order_dict['stationName'] = data_list[2].text
+        order_dict['sended'] = data_list[8].text
+        order_dict['submitTime'] = data_list[9].text
+        order_dict['status'] = data_list[10].text
+        order_dict['company'] = data_list[11].text
 
-    order_list.append(order_dict)
+        order_list.append(order_dict)
 
-    url_all.append(url_fix)
-    #  获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
+        url_all.append(url_fix)
+        #  获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
 
-    # driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
+    driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
+    current_page += 1  # 当前页码加1
 
 for item_url in url_all:
+    # time.sleep(3)
     driver.get(item_url)  # 直接使用上面的分离出来的url打开为新页面，处理步骤的分页功能失效，直接加载了全部的步骤出来，方便了不用判断步骤的分页
 
     order_id = driver.find_element_by_xpath('//*[@id="tbody_1"]/table/tbody/tr[1]/td[1]').text  # 详单里面的ID，
@@ -129,12 +134,8 @@ for item_url in url_all:
     for item in order_list:
         if item['orderId'] == order_id:
             item['current_operator'] = processing_list[-1][1]
-            # print(item['current_operator'])
             item['rejectNum'] = examine_num
-            # item['processing'] = processing_list
             item['rejectList'] = reject_list
-
-# print(order_list)
 
 # 内容写入excle文件中
 filename = time.strftime('%Y%m%d', time.localtime(time.time()))
@@ -172,10 +173,9 @@ worksheet.set_column('AA:AA', 10)
 worksheet.set_column('AB:AB', 30)
 worksheet.set_column('AC:AC', 10)
 
-
 # 设置标题头样式，字体加粗，水平对齐,上下居中，边框1像素
 titlecss = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 2,
-                                'bg_color': 'blue','color': 'white', 'text_wrap': True})
+                                'bg_color': 'blue', 'color': 'white', 'text_wrap': True})
 contextcss = workbook.add_format({'align': 'left', 'valign': 'vcenter', 'border': 1, 'text_wrap': True})
 
 title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '提交时间', '状态', '当前处理人', '所属分公司', '退单次数',
@@ -184,7 +184,7 @@ title = ['稽核单编号', '基站编号', '基站名称', '是否已派单', '
          '省公司第六次退单原因', '第六次退单操作人', '省公司第七次退单原因', '第七次退单操作人', '省公司第八次退单原因',
          '第八次退单操作人', '省公司第九次退单原因', '第九次退单操作人', '省公司第十次退单原因', '第十次退单操作人',
          ]
-worksheet.write_row('A1', title,titlecss)
+worksheet.write_row('A1', title, titlecss)
 num = 2
 for item in order_list:
 
@@ -211,12 +211,11 @@ for item in order_list:
 
     # 如果退单的列表长度不够20，就在列表后面不20减去列表长度的数量的空格，目的是要让这些空白的单元格也有边框，属于文件的美化
     if len(tList) < 20:
-        for i in range(20-len(tList)):
+        for i in range(20 - len(tList)):
             tList.append(' ')
 
     dataRow = [orderId, stationId, stationName, sended, submitTime, status, current_operator, company, rejectNum]
     dataRow = dataRow + tList
-    # tmp_list = list(item.values())
 
     worksheet.write_row('A' + str(num), dataRow, contextcss)
     num = int(num) + 1
