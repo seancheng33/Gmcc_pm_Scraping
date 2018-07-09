@@ -51,15 +51,18 @@ time.sleep(15)  # 需要这样停数秒，才能获取到
 page_num = driver.find_element_by_id('data-table_info').text
 total_page = re.findall('共(.*)页', page_num)  # 通过正则表达式获取总页数
 total_page = int(total_page[0].replace(' ', ''))  # 转为int类型
-
 current_page = 1
 url_all = []
 order_list = []
 
 # 循环执行，知道当前页的页码等于总页码（当前页小于总页码+1）
-while current_page < total_page+1:
+while current_page < total_page + 1:
     time.sleep(15)
-    trs = driver.find_elements_by_xpath('//*[@id="data-table"]/tbody/tr')
+    try:
+        trs = driver.find_elements_by_xpath('//*[@id="data-table"]/tbody/tr')
+    except:
+        break
+
     for tr in trs:
         tr_html = tr.get_attribute('innerHTML')
         soup = BeautifulSoup(tr_html, 'html.parser')
@@ -70,8 +73,6 @@ while current_page < total_page+1:
         url_fix = re.findall('"(.*)"', url)  # 通过正则表达式获取两个引号中的内容
         # 上面获取到的内容，是一个list，但实际只用一个值
         url_fix = config.get("basic", "base_url") + url_fix[0]  # 在前面加上基础的网址,组合成一段完整的网址
-
-        # print(data_list[0].text, url_fix)
 
         order_dict = {}
 
@@ -94,48 +95,55 @@ while current_page < total_page+1:
 for item_url in url_all:
     # time.sleep(3)
     driver.get(item_url)  # 直接使用上面的分离出来的url打开为新页面，处理步骤的分页功能失效，直接加载了全部的步骤出来，方便了不用判断步骤的分页
+    try:
+        order_id = driver.find_element_by_xpath('//*[@id="tbody_1"]/table/tbody/tr[1]/td[1]').text  # 详单里面的ID，
+        d_trs = driver.find_elements_by_xpath('//*[@id="details-table"]/tbody/tr')
+        processing_list = []  # 保存全部的处理进程
+        # print(order_id.text)
+        for d_tr in d_trs:
+            tr_html = d_tr.get_attribute('innerHTML')
+            soup = BeautifulSoup(tr_html, 'html.parser')
+            data_list = soup.find_all('td')
+            tmp_list = []
+            for item in data_list:
+                tmp_list.append(item.text)
+            processing_list.append(tmp_list)
+        examine_num = 0
+        reject_list = []
 
-    order_id = driver.find_element_by_xpath('//*[@id="tbody_1"]/table/tbody/tr[1]/td[1]').text  # 详单里面的ID，
-    d_trs = driver.find_elements_by_xpath('//*[@id="details-table"]/tbody/tr')
-    processing_list = []  # 保存全部的处理进程
-    # print(order_id.text)
-    for d_tr in d_trs:
-        tr_html = d_tr.get_attribute('innerHTML')
-        soup = BeautifulSoup(tr_html, 'html.parser')
-        data_list = soup.find_all('td')
-        tmp_list = []
-        for item in data_list:
-            tmp_list.append(item.text)
-        processing_list.append(tmp_list)
-    examine_num = 0
-    reject_list = []
+        # 获取只包含‘省公司’的进程内容
+        for i in processing_list:
+            examine_dict = {}
+            if '省公司' in i[0]:
+                examine_dict['num'] = examine_num
+                examine_dict['name'] = i[1]
+                try:
+                    examine_dict['time'] = i[3]
+                except IndexError:
+                    examine_dict['time'] = '未处理'
+                try:
+                    examine_dict['status'] = i[2]
+                except IndexError:
+                    examine_dict['status'] = '未处理'
+                reject_list.append(examine_dict)
 
-    # 获取只包含‘省公司’的进程内容
-    for i in processing_list:
-        examine_dict = {}
-        if '省公司' in i[0]:
-            examine_dict['num'] = examine_num
-            examine_dict['name'] = i[1]
-            try:
-                examine_dict['time'] = i[3]
-            except IndexError:
-                examine_dict['time'] = '未处理'
-            try:
-                examine_dict['status'] = i[2]
-            except IndexError:
-                examine_dict['status'] = '未处理'
-            reject_list.append(examine_dict)
+        #  查找不同意的次数
+        for item in reject_list:
+            if '不同意' in item['status']:
+                examine_num += 1
 
-    #  查找不同意的次数
-    for item in reject_list:
-        if '不同意' in item['status']:
-            examine_num += 1
+        for item in order_list:
+            if item['orderId'] == order_id:
+                item['current_operator'] = processing_list[-1][1]
+                item['rejectNum'] = examine_num
+                item['rejectList'] = reject_list
+    except:
+        nowTime = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+        with open(os.path.abspath('error' + nowTime + '.txt'), 'a', encoding='utf-8') as file:
+            file.write('无法访问的网址：' + item_url + '\n')
+        continue
 
-    for item in order_list:
-        if item['orderId'] == order_id:
-            item['current_operator'] = processing_list[-1][1]
-            item['rejectNum'] = examine_num
-            item['rejectList'] = reject_list
+driver.quit()
 
 # 内容写入excle文件中
 filename = time.strftime('%Y%m%d', time.localtime(time.time()))
@@ -194,9 +202,16 @@ for item in order_list:
     sended = item['sended']
     submitTime = item['submitTime']
     status = item['status']
-    current_operator = item['current_operator']
+    if 'current_operator' not in item.keys():
+        current_operator = ''
+    else:
+        current_operator = item['current_operator']
+
     company = item['company']
-    rejectNum = item['rejectNum']
+    if 'rejectNum' not in item.keys():
+        rejectNum = 0
+    else:
+        rejectNum = item['rejectNum']
 
     tDict = item['rejectList']
     tList = []
@@ -219,5 +234,3 @@ for item in order_list:
 
     worksheet.write_row('A' + str(num), dataRow, contextcss)
     num = int(num) + 1
-
-driver.quit()

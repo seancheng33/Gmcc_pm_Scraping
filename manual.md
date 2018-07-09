@@ -27,10 +27,10 @@ requirements.txt文件包含在项目的根目录中
 ## 项目结构
 * lib文件夹存放各类项目所需要的外部执行文件，包括webdriver插件
 * data文件夹，保存获取后的文件就保存在这里
-* tmp文件夹，存放校验码的临时文件夹，保存下来的校验码图片，使用ocr识别为字符串
 * manual.md文件，项目的说明手册，同时也是开发文档。
 * requirements.txt 项目所有依赖包及其精确的版本号的需求文件
 * scraping.py文件，项目的主文件，执行文件
+* readme.md 简易项目说明文档
 
 ## config.ini的配置
 - base_url 网站的根一级网址
