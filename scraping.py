@@ -129,7 +129,7 @@ for item_url in url_all:
                 except IndexError:
                     examine_dict['status'] = '未处理'
                 reject_list.append(examine_dict)
-        print(reject_list)
+        # print(reject_list)
         #  查找不同意的次数
         for item in reject_list:
             if '不同意' in item['status']:
@@ -219,7 +219,7 @@ for item in order_list:
         tDict = [{'num': 0, 'name': '', 'time': '', 'status': ''}]
     else:
         tDict = item['rejectList']
-    print(item['rejectList'])
+
     tList = []
     for item in tDict:
         if '不同意' in item['status']:
