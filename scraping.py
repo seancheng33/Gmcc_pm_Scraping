@@ -8,6 +8,7 @@ import os
 import re
 import time
 
+import selenium
 import xlsxwriter
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -47,10 +48,10 @@ page_length.select_by_visible_text('50')  # 显示100条数据，显示太少的
 
 driver.find_element_by_xpath('//*[@id="submitSearch"]').click()
 
-time.sleep(15)  # 需要这样停数秒，才能获取到
+time.sleep(20)  # 需要这样停数秒，才能获取到
 page_num = driver.find_element_by_id('data-table_info').text
 total_page = re.findall('共(.*)页', page_num)  # 通过正则表达式获取总页数
-total_page = int(total_page[0].replace(' ', ''))  # 转为int类型
+total_page = int(total_page[0].strip())  # 转为int类型
 current_page = 1
 url_all = []
 order_list = []
@@ -88,9 +89,11 @@ while current_page < total_page + 1:
 
         url_all.append(url_fix)
         #  获取全部的内容，分离组合里面的查看里面的url出来，然后就直接重新打开这个页面
-
-    driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
-    current_page += 1  # 当前页码加1
+    try:
+        driver.find_element_by_xpath('//*[@id="data-table_paginate"]/a[3]').click()  # 点击下一页，继续获取内容
+        current_page += 1  # 当前页码加1
+    except selenium.common.exceptions.WebDriverException:
+        break
 
 for item_url in url_all:
     # time.sleep(3)
@@ -126,7 +129,7 @@ for item_url in url_all:
                 except IndexError:
                     examine_dict['status'] = '未处理'
                 reject_list.append(examine_dict)
-
+        print(reject_list)
         #  查找不同意的次数
         for item in reject_list:
             if '不同意' in item['status']:
@@ -212,8 +215,11 @@ for item in order_list:
         rejectNum = 0
     else:
         rejectNum = item['rejectNum']
-
-    tDict = item['rejectList']
+    if 'rejectList' not in item.keys():
+        tDict = [{'num': 0, 'name': '', 'time': '', 'status': ''}]
+    else:
+        tDict = item['rejectList']
+    print(item['rejectList'])
     tList = []
     for item in tDict:
         if '不同意' in item['status']:
